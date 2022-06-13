@@ -9,7 +9,6 @@ Each AC operates at 220v and consists of a compressor, a fan with variable speed
 If the currently operating AC is unable to reach the required temperature within 5 minutes, an alarm led is lighted and the system switches to the other AC until it is reset.
 
 # System Components
-
 - 2 ACs, each have
   - Compressor
   - Fan
@@ -20,6 +19,13 @@ If the currently operating AC is unable to reach the required temperature within
   - DOWN
   - MODE (required temperature, interval, fan speed)
 - Alarm Led
+
+# Schematic
+## ACs
+![AC](Schematic/AC.png)
+
+## System Schematic
+![System](Schematic/System.png)
 
 # Assumptions
 - Temperature sensors are linear.
@@ -274,4 +280,5 @@ void loop() {
   systemBehavior();
 }
 ```
-
+# Whole Code
+[code](Code.ino)
