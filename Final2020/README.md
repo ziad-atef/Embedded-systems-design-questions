@@ -27,6 +27,7 @@ The User can do the following:
 
 # Schematic
 <details> <summary>Click to expand!</summary>
+
 We will use demultiplexes to switch between ACs. We will use the same selection bits for the fans and temperature sensors
 ## ACs
 ![AC](Schematic/AC.png)
