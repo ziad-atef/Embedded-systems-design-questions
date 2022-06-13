@@ -37,35 +37,6 @@ float calculateTemperature(int AC) {
         return (calculateTemperature(temperature_sensor_AC2_1) + calculateTemperature(temperature_sensor_AC2_2)) / 2;
     }
 }
-void userInterface() {
-  if ( digitalRead(ON_OFF_PB) ) {
-    OnOff = !OnOff;
-  }
-
-  if ( digitalRead(Mode) ) {
-    Mode = (Mode++)%3;
-  }
-int inc  = 0;
-inc = digitalRead(UP_PB) ? 1 : inc;
-inc = digitalRead(DOWN_PB) ? -1 : inc;
-
-if (inc != 0) {
-    if(Mode == MODE_TEMPERATURE) {
-      requiredTemp += inc;
-      temperatureTimeOfChange = millis(); // reset the time when the temperature is changed
-    }
-    else if(Mode == MODE_FAN_SPEED) {
-      currentFanSpeed += inc;
-      currentFanSpeed = currentFanSpeed > 255 ? 255 : currentFanSpeed;
-      currentFanSpeed = currentFanSpeed < 0 ? 0 : currentFanSpeed;
-    }
-    else if(Mode == MODE_ALTERNATING_INTERVAL) {
-      alternationTime += inc * 60; // multiples of 60 minutes
-      alternationTime = alternationTime < 0 ? 0 : alternationTime;
-    }
-  }
-
-}
 void controlAC(int AC, int fanSpeed, int compressor) {
     if (AC == AC1) {
         digitalWrite(Fan1, fanSpeed);
@@ -75,6 +46,45 @@ void controlAC(int AC, int fanSpeed, int compressor) {
         digitalWrite(Compressor2, compressor);
     }
 }
+int readPushButton(int pb)
+{
+  if (digitalWrite(pb) == HIGH)
+  {
+    while(digitalWrite(pb) == HIGH);
+    return 1;
+  }
+  return 0;
+}
+void userInterface() {
+  if ( readPushButton(ON_OFF_PB) ) {
+    OnOff = !OnOff;
+  }
+
+  if ( readPushButton(Mode) ) {
+    Mode = (Mode++)%3;
+  }
+  int inc  = 0;
+  inc = readPushButton(UP_PB) ? 1 : inc;
+  inc = readPushButton(DOWN_PB) ? -1 : inc;
+
+  if (inc != 0) {
+      if(Mode == MODE_TEMPERATURE) {
+        requiredTemp += inc;
+        temperatureTimeOfChange = millis(); // reset the time when the temperature is changed
+      }
+      else if(Mode == MODE_FAN_SPEED) {
+        currentFanSpeed += inc;
+        currentFanSpeed = currentFanSpeed > 255 ? 255 : currentFanSpeed;
+        currentFanSpeed = currentFanSpeed < 0 ? 0 : currentFanSpeed;
+      }
+      else if(Mode == MODE_ALTERNATING_INTERVAL) {
+        alternationTime += inc * 60; // multiples of 60 minutes
+        alternationTime = alternationTime < 0 ? 0 : alternationTime;
+      }
+    }
+
+}
+
 void systemBehavior() {
   if ( OnOff == OFF_STATE ) {
     //switch everything off

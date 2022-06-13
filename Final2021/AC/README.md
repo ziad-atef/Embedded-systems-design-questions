@@ -89,7 +89,38 @@ float calculateTemperature(int AC) {
 }
 ```
 I know that you are wondering why have calculated the temperatures then averaged it, we could simply averaged the voltage readings then calculated the temperature only once. We didn't do this for the exact same reason. We want to abstract the temperature calculations as much as we can. Hence, if we have replaced the sensor, for instance with a non linear one, the rest of the code can be unchanged. 
+## Read Push Buttons
+Hey bro, a whole module for the push buttons?! well, dealing with push buttons are not that straightforward you know. Push buttons have a property called debouncing, that we need to deal with, to prevent the system from reacting to the same push button multiple times. 
 
+There are two main approaches -as far as I know- to solve this issue: 
+
+### 1. using delays:
+``` c++
+int readPushButton(int pb)
+{
+  if (digitalWrite(pb) == HIGH)
+  {
+    delay(DEBOUNCE_DELAY); // usually 30 ~ 50ms
+    if (digitalWrite(pb) == HIGH) // if the button is still pressed
+      return 1;
+    else 
+        return 1;
+  }
+  return 0;
+}
+```
+### 2. using loops:
+``` c++
+int readPushButton(int pb)
+{
+  if (digitalWrite(pb) == HIGH)
+  {
+    while(digitalWrite(pb) == HIGH); // stay here until button is released
+    return 1;
+  }
+  return 0;
+}
+```
 ## Control ACs
 Here, we have made two utility functions to help us control the fans and get more abstractions. 
 ``` c++
@@ -103,26 +134,23 @@ void controlAC(int AC, int fanSpeed, int compressor) {
     }
 }
 ```
-
 ## User Interface
 The beauty of this module -function- is that we have abstracted all the system interface with the user in a single module. By user interface I mean the buttons. 
-
-**ON/OFF State**
+### ON/OFF State
 ``` c++
-  if ( digitalRead(ON_OFF_PB) ) {
+  if ( readPushButton(ON_OFF_PB) ) {
     OnOff = !OnOff;
   }
 ```
-
-**Mode**
+### Mode
 ``` c++
-  if ( digitalRead(Mode) ) {
+  if ( readPushButton(Mode) ) {
     Mode = (Mode++)%3; // Mode is 0, 1, 2. There a lot of ways to optimize this line.
   }
 ```
-**Ups & Downs -same like life-**
+### Ups & Downs -UR life is only downs, sorry-
 ``` c++
-  if ( digitalRead(UP_PB) ) {
+  if ( readPushButton(UP_PB) ) {
     if(Mode == MODE_TEMPERATURE) {
       requiredTemp++;
       timeOfChange = millis(); // reset the time when the temperature is changed
@@ -135,7 +163,7 @@ The beauty of this module -function- is that we have abstracted all the system i
     }
   }
 
-  if ( digitalRead(DOWN_PB) ) {
+  if ( readPushButton(DOWN_PB) ) {
     if(Mode == MODE_TEMPERATURE) {
       requiredTemp--;
        timeOfChange = millis(); // reset the time when the temperature is changed
@@ -153,8 +181,8 @@ We can optimize the code by using a switch statement.
 We can eliminate some redundant code using this:
 ``` c++
 int inc  = 0;
-inc = digitalRead(UP_PB) ? 1 : inc;
-inc = digitalRead(DOWN_PB) ? -1 : inc;
+inc = readPushButton(UP_PB) ? 1 : inc;
+inc = readPushButton(DOWN_PB) ? -1 : inc;
 
 if (inc != 0) {
     if(Mode == MODE_TEMPERATURE) {
@@ -173,7 +201,38 @@ if (inc != 0) {
   }
 // There is a room for a lot of optimization here, but I prefer readable code. 
 ```
+The Whole Function: 
+``` c++
+void userInterface() {
+  if ( readPushButton(ON_OFF_PB) ) {
+    OnOff = !OnOff;
+  }
 
+  if ( readPushButton(Mode) ) {
+    Mode = (Mode++)%3;
+  }
+  int inc  = 0;
+  inc = readPushButton(UP_PB) ? 1 : inc;
+  inc = readPushButton(DOWN_PB) ? -1 : inc;
+
+  if (inc != 0) {
+      if(Mode == MODE_TEMPERATURE) {
+        requiredTemp += inc;
+        temperatureTimeOfChange = millis(); // reset the time when the temperature is changed
+      }
+      else if(Mode == MODE_FAN_SPEED) {
+        currentFanSpeed += inc;
+        currentFanSpeed = currentFanSpeed > 255 ? 255 : currentFanSpeed;
+        currentFanSpeed = currentFanSpeed < 0 ? 0 : currentFanSpeed;
+      }
+      else if(Mode == MODE_ALTERNATING_INTERVAL) {
+        alternationTime += inc * 60; // multiples of 60 minutes
+        alternationTime = alternationTime < 0 ? 0 : alternationTime;
+      }
+    }
+
+}
+```
 ## System Behavior
 Here, we implement our logic for the system.
 
