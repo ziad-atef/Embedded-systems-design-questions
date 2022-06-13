@@ -26,13 +26,14 @@ The User can do the following:
 - Alarm Led
 
 # Schematic
-<details> <summary>Click to expand!</summary>
+<details> <summary>Click to expand...</summary>
 
-We will use demultiplexes to switch between ACs. We will use the same selection bits for the fans and temperature sensors
 ## ACs
 ![AC](Schematic/AC.png)
 
 ## System Schematic
+We will use Demultiplexeres to switch between ACs. We will use the same selection bits for the fans and temperature sensors
+
 ![System](Schematic/System.png)
 
 </details>
@@ -47,7 +48,7 @@ We will use demultiplexes to switch between ACs. We will use the same selection 
 
 # Modules
 ## Setup the System 
-<details> <summary>Click to expand!</summary>
+<details> <summary>Click to expand...</summary>
 
 Here we setup our pins' direction, whether they are in or out.
 
@@ -69,7 +70,7 @@ void setup() {
 </details>
 
 ## Calculate Temperature
-<details> <summary>Click to expand!</summary>
+<details> <summary>Click to expand...</summary>
 
 How can we calculate the temperature? we are given two parameters: the bias and the slope.
 In other words we have this line: Y(voltage) = m * X(temperature) + c
@@ -101,7 +102,7 @@ I know that you are wondering why have calculated the temperatures then averaged
 
 ## Read Push Buttons
 <details>
-<summary>Click to expand!</summary>
+<summary>Click to expand...</summary>
 
 Hey bro, a whole module for the push buttons?! well, dealing with push buttons are not that straightforward you know. Push buttons have a property called debouncing, that we need to deal with, to prevent the system from reacting to the same push button multiple times. 
 
@@ -140,7 +141,7 @@ int readPushButton(int pb)
 
 
 ## Update fan level
-<details> <summary>Click to expand!</summary>
+<details> <summary>Click to expand...</summary>
 
 The fan can have up to `MAX_NUMBER_FAN_LEVELS` levels. The fan speed is calculated based on this level.
 
@@ -157,7 +158,7 @@ void updateFanLevel(int inc) {
 </details>
 
 ## Update Current AC
-<details> <summary>Click to expand!</summary>
+<details> <summary>Click to expand...</summary>
 
 ``` c++
 void updateCurrentAC(int incrementValue)
@@ -177,7 +178,7 @@ void updateCurrentAC(int incrementValue)
 
 
 ## Control ACs
-<details> <summary>Click to expand!</summary>
+<details> <summary>Click to expand...</summary>
 
 Here, we have made two utility functions to help us control the fans and get more abstractions. We don't need to specify which AC we are using, as we the Mux will handle it based on the passed selection bits.
 ``` c++
@@ -189,7 +190,7 @@ void controlAC(int fanSpeed, int compressor) {
 </details>
 
 ## User Interface
-<details> <summary>Click to expand!</summary>
+<details> <summary>Click to expand...</summary>
 
 The beauty of this module -function- is that we have abstracted all the system interface with the user in a single module. By user interface I mean the buttons. 
 ### Mode
@@ -199,7 +200,7 @@ The beauty of this module -function- is that we have abstracted all the system i
   }
 ```
 ### Ups & Downs -UR life is only downs, sorry-
-<details> <summary>Click to expand!</summary>
+<details> <summary>Click to expand...</summary>
 
 ``` c++
   if ( readPushButton(UP_PB) ) {
@@ -252,7 +253,7 @@ inc = readPushButton(DOWN_PB) ? -1 : inc;
 // There is a room for a lot of optimization here, but I prefer readable code. 
 </details>
 
-<details> <summary>Click to expand!</summary>
+<details> <summary>Click to expand...</summary>
 
 ```
 The Whole Function: 
@@ -284,14 +285,15 @@ void userInterface() {
 </details>
 
 ## System Behavior
-<details> <summary>Click to expand!</summary>
+<details> <summary>Click to expand...</summary>
 
 Here, we implement our logic for the system.
 >> Note that, we don't have ON/OFF States here.
+
 We have two main blocks:
 
 ### 1. Check if we need to alternate
-<details> <summary>Click to expand!</summary>
+<details> <summary>Click to expand...</summary>
 
 ``` c++
 long long currentTime = millis(); // get the currentTime
@@ -310,7 +312,7 @@ if (currentTime - temperatureTimeOfChange > 60min) // 60 minutes has passed
 </details>
 
 ### 2. Check if we need to turn on/off the AC
-<details> <summary>Click to expand!</summary>
+<details> <summary>Click to expand...</summary>
 
 ``` c++
 // check if we need to close the ACs
@@ -328,7 +330,7 @@ else
 </details>
 
 ### Now, function is
-<details> <summary>Click to expand!</summary>
+<details> <summary>Click to expand...</summary>
 
 ``` c++
 void systemBehavior() {
