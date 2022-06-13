@@ -169,7 +169,7 @@ void updateCurrentAC(int incrementValue)
   digitalWrite(addressAC0, currentAC & 0x1); // bit 0 -> xx(x) & 001
   digitalWrite(addressAC1, currentAC & 0x2); // bit 1 -> x(x)x & 010
   digitalWrite(addressAC2, currentAC & 0x4); // bit 2 -> (x)xx & 100
-  // Now, I can say that I am proud of myself <3
+  // Great way I know, thanks <3
 }
 ```
 </details>
@@ -372,4 +372,4 @@ void loop() {
 </details>
 
 # Whole Code
-[code](Code.ino)
+[code](code.ino)
