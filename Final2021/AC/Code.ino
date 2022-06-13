@@ -11,13 +11,13 @@
 #define Fan1 6
 #define Fan2 9
 
-#define AC1 0
-#define AC2 1
+#define AC0 0
+#define AC1 1
 
 #define temperature_sensor_AC1_1 A0
 #define temperature_sensor_AC1_2 A1
-#define temperature_sensor_AC2_1 A2
-#define temperature_sensor_AC2_2 A3
+#define temperature_sensor_AC0_1 A2
+#define temperature_sensor_AC0_2 A3
 
 #define MODE_TEMPERATURE 0
 #define MODE_FAN_SPEED 1
@@ -30,18 +30,21 @@ bool OnOff = false, alarmState = false;
 long timeOfSwitch, temperatureTimeOfChange;
 int  requiredTemp = 25, currentFanSpeed = 10, alternationTime = 60, Mode = 0, currentAC = AC1;
 
+float readTemperatureSensor(int sensor) {
+    return analogRead(sensor) * (5.0 / 1023.0) * 100;
+}
 float calculateTemperature(int AC) {
     if (AC == AC1) {
-        return (calculateTemperature(temperature_sensor_AC1_1) + calculateTemperature(temperature_sensor_AC1_2)) / 2;
-    } else if (AC == AC2) {
-        return (calculateTemperature(temperature_sensor_AC2_1) + calculateTemperature(temperature_sensor_AC2_2)) / 2;
+        return (readTemperatureSensor(temperature_sensor_AC1_1) + readTemperatureSensor(temperature_sensor_AC1_2)) / 2;
+    } else if (AC == AC0) {
+        return (readTemperatureSensor(temperature_sensor_AC0_1) + readTemperatureSensor(temperature_sensor_AC0_2)) / 2;
     }
 }
 void controlAC(int AC, int fanSpeed, int compressor) {
     if (AC == AC1) {
         digitalWrite(Fan1, fanSpeed);
         digitalWrite(Compressor1, compressor);
-    } else if (AC == AC2) {
+    } else if (AC == AC0) {
         digitalWrite(Fan2, fanSpeed);
         digitalWrite(Compressor2, compressor);
     }
@@ -89,7 +92,7 @@ void systemBehavior() {
   if ( OnOff == OFF_STATE ) {
     //switch everything off
     controlAC(AC1, LOW, LOW);
-    controlAC(AC2, LOW, LOW);
+    controlAC(AC0, LOW, LOW);
     digitalWrite(ALARM_LED, LOW);
   }
   else {

@@ -1,4 +1,5 @@
 # Problem Description
+
 Design a system that controls 2 ACs -Air Conditioner- that alternate every x hours. 
 
 The system consists of 2 ACs and 4 push buttons: ON/OFF, UP, DOWN, MODE.
@@ -19,20 +20,21 @@ If the currently operating AC is unable to reach the required temperature within
   - DOWN
   - MODE (required temperature, interval, fan speed)
 - Alarm Led
-
 # Schematic
+<details> <summary>Click to expand!</summary>
+
 ## ACs
 ![AC](Schematic/AC.png)
 
 ## System Schematic
 ![System](Schematic/System.png)
 
+</details>
+
 # Assumptions
 - Temperature sensors are linear.
 - Fan speed has 225 values (0 ~ 255).
 - No debouncing for the push buttons.
-
-
 # System Intended Behavior  
 - The fan operates on the specified speed.
 - The compressor is always on when the AC is on.
@@ -42,6 +44,8 @@ If the currently operating AC is unable to reach the required temperature within
 
 # Modules
 ## Setup the System 
+<details> <summary>Click to expand!</summary>
+
 Here we setup our pins' direction, whether they are in or out.
 
 ``` c++
@@ -62,11 +66,15 @@ void setup() {
     // Note that, we don't need to set the direction of the temperature sensors(analog pins), since they are already set to input. 
 }
 ```
+</details>
+
 ## Calculate Temperature
+<details> <summary>Click to expand!</summary>
+
 Since our temperature sensors are already linear, we can directly calculate the temperature using this code:
 
 ``` c++
-float calculateTemperature(int sensor) {
+float readTemperatureSensor(int sensor) {
     float voltage = analogRead(sensor) * (5.0 / 1023.0);
     float temperature = voltage * 100;
     return temperature;
@@ -74,7 +82,7 @@ float calculateTemperature(int sensor) {
 ```
 Or simply:
 ``` c++
-float calculateTemperature(int sensor) {
+float readTemperatureSensor(int sensor) {
     return analogRead(sensor) * (5.0 / 1023.0) * 100;
 }
 ```
@@ -82,14 +90,19 @@ In our case, we have two sensors for each AC, so we need to calculate the averag
 ``` c++
 float calculateTemperature(int AC) {
     if (AC == AC1) {
-        return (calculateTemperature(temperature_sensor_AC1_1) + calculateTemperature(temperature_sensor_AC1_2)) / 2;
-    } else if (AC == AC2) {
-        return (calculateTemperature(temperature_sensor_AC2_1) + calculateTemperature(temperature_sensor_AC2_2)) / 2;
+        return (readTemperatureSensor(temperature_sensor_AC1_1) + readTemperatureSensor(temperature_sensor_AC1_2)) / 2;
+    } else if (AC == AC0) {
+        return (readTemperatureSensor(temperature_sensor_AC0_1) + readTemperatureSensor(temperature_sensor_AC0_2)) / 2;
     }
 }
 ```
 I know that you are wondering why have calculated the temperatures then averaged it, we could simply averaged the voltage readings then calculated the temperature only once. We didn't do this for the exact same reason. We want to abstract the temperature calculations as much as we can. Hence, if we have replaced the sensor, for instance with a non linear one, the rest of the code can be unchanged. 
+</details>
+
 ## Read Push Buttons
+<details>
+<summary>Click to expand!</summary>
+
 Hey bro, a whole module for the push buttons?! well, dealing with push buttons are not that straightforward you know. Push buttons have a property called debouncing, that we need to deal with, to prevent the system from reacting to the same push button multiple times. 
 
 There are two main approaches -as far as I know- to solve this issue: 
@@ -121,20 +134,29 @@ int readPushButton(int pb)
   return 0;
 }
 ```
+
+</details>
+
 ## Control ACs
+<details> <summary>Click to expand!</summary>
+
 Here, we have made two utility functions to help us control the fans and get more abstractions. 
 ``` c++
 void controlAC(int AC, int fanSpeed, int compressor) {
     if (AC == AC1) {
         digitalWrite(Fan1, fanSpeed);
         digitalWrite(Compressor1, compressor);
-    } else if (AC == AC2) {
+    } else if (AC == AC0) {
         digitalWrite(Fan2, fanSpeed);
         digitalWrite(Compressor2, compressor);
     }
 }
 ```
+</details>
+
 ## User Interface
+<details> <summary>Click to expand!</summary>
+
 The beauty of this module -function- is that we have abstracted all the system interface with the user in a single module. By user interface I mean the buttons. 
 ### ON/OFF State
 ``` c++
@@ -149,6 +171,8 @@ The beauty of this module -function- is that we have abstracted all the system i
   }
 ```
 ### Ups & Downs -UR life is only downs, sorry-
+<details> <summary>Click to expand!</summary>
+
 ``` c++
   if ( readPushButton(UP_PB) ) {
     if(Mode == MODE_TEMPERATURE) {
@@ -200,6 +224,10 @@ if (inc != 0) {
     }
   }
 // There is a room for a lot of optimization here, but I prefer readable code. 
+</details>
+
+<details> <summary>Click to expand!</summary>
+
 ```
 The Whole Function: 
 ``` c++
@@ -233,7 +261,13 @@ void userInterface() {
 
 }
 ```
+</details>
+
+</details>
+
 ## System Behavior
+<details> <summary>Click to expand!</summary>
+
 Here, we implement our logic for the system.
 
 If the we are on the off state, switch everything off.
@@ -241,13 +275,15 @@ If the we are on the off state, switch everything off.
 if ( OnOff == OFF_STATE ) {
     //switch everything off
    controlAC(AC1, LOW, LOW);
-   controlAC(AC2, LOW, LOW);
+   controlAC(AC0, LOW, LOW);
    digitalWrite(ALARM_LED, HIGH);
   }
 ```
 if we the system if on, we have two main blocks:
 
 ### 1. Check if we need to alternate
+<details> <summary>Click to expand!</summary>
+
 ``` c++
 long long currentTime = millis(); // get the currentTime
 // check if we need to alternate ACs
@@ -271,7 +307,11 @@ else if (currentTime - timeOfChange > 5min) // 5 minutes has passed
     }
 }
 ```
+</details>
+
 ### 2. Check if we need to turn on/off the AC
+<details> <summary>Click to expand!</summary>
+
 ``` c++
 // check if we need to close the ACs
 if (calculateTemperature(currentAC) <= requiredTemp)
@@ -285,13 +325,17 @@ else
     alarmState = LOW; // switch off the alarm
 }
 ```
-### The function will be like this:
+</details>
+
+### Now, function is
+<details> <summary>Click to expand!</summary>
+
 ``` c++
 void systemBehavior() {
   if ( OnOff == OFF_STATE ) {
     //switch everything off
     controlAC(AC1, LOW, LOW);
-    controlAC(AC2, LOW, LOW);
+    controlAC(AC0, LOW, LOW);
     digitalWrite(ALARM_LED, LOW);
   }
   else {
@@ -332,6 +376,8 @@ void systemBehavior() {
   }
 }
 ```
+</details>
+
 ## Finally, the main loop
 ```c++
 void loop() {
@@ -339,5 +385,7 @@ void loop() {
   systemBehavior();
 }
 ```
+</details>
+
 # Whole Code
 [code](Code.ino)
