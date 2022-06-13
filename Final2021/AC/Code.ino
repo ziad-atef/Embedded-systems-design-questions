@@ -1,9 +1,9 @@
-#define OnOffPB 0
-#define UpPB 1
-#define DownPB 2
-#define ModePB 3
+#define ON_OFF_PB 0
+#define UP_PB 1
+#define DOWN_PB 2
+#define MODE_PB 3
 
-#define ErrorLEd 4
+#define ALARM_LED 4
 
 #define Compressor1 5
 #define Compressor2 7
@@ -11,139 +11,121 @@
 #define Fan1 6
 #define Fan2 9
 
-bool OnOff = false, Error = false;
-long TimeOld, TimeNew, TimeChange;
-int Temp = 25, FanSpeed = 10, Time = 60, Mode = 0, AC = 1;
+#define AC1 0
+#define AC2 1
 
-void getTemp() {
-  Temp = analogRead(A0);
-  Temp = map(Temp, 0, 1023, 0, 100);
-  Temp = Temp / 10;
+#define temperature_sensor_AC1_1 A0
+#define temperature_sensor_AC1_2 A1
+#define temperature_sensor_AC2_1 A2
+#define temperature_sensor_AC2_2 A3
+
+#define MODE_TEMPERATURE 0
+#define MODE_FAN_SPEED 1
+#define MODE_ALTERNATING_INTERVAL 2
+
+#define OFF_STATE 0
+#define ON_STATE 1
+
+bool OnOff = false, alarmState = false;
+long timeOfSwitch, temperatureTimeOfChange;
+int  requiredTemp = 25, currentFanSpeed = 10, alternationTime = 60, Mode = 0, currentAC = AC1;
+
+float calculateTemperature(int AC) {
+    if (AC == AC1) {
+        return (calculateTemperature(temperature_sensor_AC1_1) + calculateTemperature(temperature_sensor_AC1_2)) / 2;
+    } else if (AC == AC2) {
+        return (calculateTemperature(temperature_sensor_AC2_1) + calculateTemperature(temperature_sensor_AC2_2)) / 2;
+    }
 }
 void userInterface() {
-  if ( digitalRead(OnOffPB) ) {
+  if ( digitalRead(ON_OFF_PB) ) {
     OnOff = !OnOff;
   }
 
   if ( digitalRead(Mode) ) {
     Mode = (Mode++)%3;
   }
+int inc  = 0;
+inc = digitalRead(UP_PB) ? 1 : inc;
+inc = digitalRead(DOWN_PB) ? -1 : inc;
 
-  if ( digitalRead(UpPB) ) {
-    if(Mode == 0 && Temp < 30) {
-      Temp++;
-      TimeChange = millis();
+if (inc != 0) {
+    if(Mode == MODE_TEMPERATURE) {
+      requiredTemp += inc;
+      temperatureTimeOfChange = millis(); // reset the time when the temperature is changed
     }
-    else if(Mode == 1 && FanSpeed < 255) {
-      FanSpeed++;
+    else if(Mode == MODE_FAN_SPEED) {
+      currentFanSpeed += inc;
+      currentFanSpeed = currentFanSpeed > 255 ? 255 : currentFanSpeed;
+      currentFanSpeed = currentFanSpeed < 0 ? 0 : currentFanSpeed;
     }
-    else if(Mode == 2 && Time < 360) {
-      Time+=60;
+    else if(Mode == MODE_ALTERNATING_INTERVAL) {
+      alternationTime += inc * 60; // multiples of 60 minutes
+      alternationTime = alternationTime < 0 ? 0 : alternationTime;
     }
   }
 
-  if ( digitalRead(DownPB) ) {
-    if(Mode == 0 && Temp > 15) {
-      Temp--;
-      TimeChange = millis();
-    }
-    else if(Mode == 1 && FanSpeed > 0) {
-      FanSpeed--;
-    }
-    else if(Mode == 2 && Time > 60) {
-      Time-=60;
-    }
-  }
 }
-
-void systemBehaviour() {
-  if ( OnOff ) {
-
-    if(Error) {
-      digitalWrite(ErrorLEd, HIGH);
-
-      if(getTemperature(AC) > Temp) {
-
-        if(AC == 1) {
-          digitalWrite(Compressor1, HIGH);
-          analogWrite(Fan1, FanSpeed);
-        }
-        else {
-          digitalWrite(Compressor2, HIGH);
-          analogWrite(Fan2, FanSpeed);
-        }
-      }
-      else {
-        digitalWrite(Compressor1, LOW);
-        digitalWrite(Compressor2, LOW);
-      }
+void controlAC(int AC, int fanSpeed, int compressor) {
+    if (AC == AC1) {
+        digitalWrite(Fan1, fanSpeed);
+        digitalWrite(Compressor1, compressor);
+    } else if (AC == AC2) {
+        digitalWrite(Fan2, fanSpeed);
+        digitalWrite(Compressor2, compressor);
     }
-    else {
-      if(millis() - TimeChange > 5min) {
-        Error = true;
-        
-        if(AC == 1){
-          AC = 2;
-          digitalWrite(Compressor1, LOW);
-          analogWrite(Fan1, 0);
-        }
-        else{
-          AC = 1;
-          digitalWrite(Compressor2, LOW);
-          analogWrite(Fan2, 0);
-        }
-      }
-      
-      if(millis() - TimeOld > Time) {
-        TimeOld = millis();
-        
-        if(AC == 1){
-          AC = 2;
-          digitalWrite(Compressor1, LOW);
-          analogWrite(Fan1, 0);
-        }
-        else{
-          AC = 1;
-          digitalWrite(Compressor2, LOW);
-          analogWrite(Fan2, 0);
-        }
-      }
-
-      if(getTemperature(AC) > Temp) {
-
-        if(AC == 1) {
-          digitalWrite(Compressor1, HIGH);
-          analogWrite(Fan1, FanSpeed);
-        }
-        else {
-          digitalWrite(Compressor2, HIGH);
-          analogWrite(Fan2, FanSpeed);
-        }
-      }
-      else {
-        digitalWrite(Compressor1, LOW);
-        digitalWrite(Compressor2, LOW);
-        TimeChange = millis();
-      }
-    }
-
+}
+void systemBehavior() {
+  if ( OnOff == OFF_STATE ) {
+    //switch everything off
+    controlAC(AC1, LOW, LOW);
+    controlAC(AC2, LOW, LOW);
+    digitalWrite(ALARM_LED, LOW);
   }
   else {
-    //switch everything off
-    digitalWrite(Compressor1, LOW);
-    digitalWrite(Compressor2, LOW);
-    digitalWrite(Fan1, LOW);
-    digitalWrite(Fan2, LOW);
+      digitalWrite(ALARM_LED, alarmState);
+      long long currentTime = millis(); // get the currentTime
+     // check if we need to alternate ACs
+     if (currentTime - timeOfSwitch > alternationTime)
+      {
+        controlAC(currentAC, LOW, LOW); // close the currentAC
+        currentAC = != currentAC; // alternate ACs
+        temperatureTimeOfChange = currentTime; // update the temperatureTimeOfChange
+        timeOfSwitch = currentTime; // update the timeOfSwitch
+      }
+      else if (currentTime - temperatureTimeOfChange > 5min) // 5 minutes has passed
+      {
+        // alternate if we haven't met the requiredTemp and we are not in the middle of an alternation
+        if (calculateTemperature(currentAC) > requiredTemp) 
+        {
+          controlAC(currentAC, LOW, LOW); // close the currentAC
+          currentAC = != currentAC; // alternate ACs
+          alarmState = HIGH; // alarm is on 
+          temperatureTimeOfChange = currentTime; // update the temperatureTimeOfChange
+          timeOfSwitch = currentTime; // update the timeOfSwitch
+        }
+      }
+      ////////////////////////////////////////////////////////////////////////////////////////////////
+      // check if we need to close the ACs
+      if (calculateTemperature(currentAC) <= requiredTemp)
+      {
+        temperatureTimeOfChange = currentTime; // update the temperatureTimeOfChange
+        controlAC(currentAC, fanSpeed, LOW);
+      }
+      else 
+      {
+        controlAC(currentAC, fanSpeed, HIGH);
+        alarmState = LOW; // switch off the alarm
+      }
   }
 }
 void setup() {
-  // put your setup code here, to run once:
-  pinMode(OnOffPB, INPUT);
-  pinMode(UpPB, INPUT);
-  pinMode(DownPB, INPUT);
-  pinMode(ModePB, INPUT);
+  pinMode(ON_OFF_PB, INPUT);
+  pinMode(UP_PB, INPUT);
+  pinMode(DOWN_PB, INPUT);
+  pinMode(MODE_PB, INPUT);
 
-  pinMode(ErrorLEd, OUTPUT);
+  pinMode(ALARM_LED, OUTPUT);
 
   pinMode(Compressor1, OUTPUT);
   pinMode(Compressor2, OUTPUT);
@@ -154,6 +136,6 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-
+  userInterface();
+  systemBehaviour();
 }
