@@ -34,7 +34,6 @@ If the currently operating AC is unable to reach the required temperature within
 # Assumptions
 - Temperature sensors are linear.
 - Fan speed has 225 values (0 ~ 255).
-- No debouncing for the push buttons.
 # System Intended Behavior  
 - The fan operates on the specified speed.
 - The compressor is always on when the AC is on.
@@ -58,12 +57,9 @@ void setup() {
     // compressors
     pinMode(Compressor1, OUTPUT);
     pinMode(Compressor2, OUTPUT);
-    // fans
-    pinMode(Fan1, OUTPUT);
-    pinMode(Fan2, OUTPUT);
     // error LED
-    pinMode(Error_LED, OUTPUT);
-    // Note that, we don't need to set the direction of the temperature sensors(analog pins), since they are already set to input. 
+    pinMode(ALERT_LED, OUTPUT);
+    // Note that, we don't need to set the direction of the temperature sensors nor the fans (analog pins), since they are already set to input. 
 }
 ```
 </details>
@@ -71,19 +67,23 @@ void setup() {
 ## Calculate Temperature
 <details> <summary>Click to expand!</summary>
 
-Since our temperature sensors are already linear, we can directly calculate the temperature using this code:
+How can we calculate the temperature? we are given two parameters: the bias and the slope.
+In other words we have this line: Y(voltage) = m * X(temperature) + c
+So, X(temperature) = (Y(voltage) - c) / m
+>> Note that, the slope is given in mV, so we need to convert it to V by dividing by 1000.
 
 ``` c++
 float readTemperatureSensor(int sensor) {
-    float voltage = analogRead(sensor) * (5.0 / 1023.0);
-    float temperature = voltage * 100;
-    return temperature;
+  float voltage = analogRead(sensor) * (5.0 / 1023.0);
+  float temperature = (voltage-1.375) / 0.0225;
+  return temperature;
 }
 ```
 Or simply:
 ``` c++
 float readTemperatureSensor(int sensor) {
-    return analogRead(sensor) * (5.0 / 1023.0) * 100;
+  float voltage = analogRead(sensor) * (5.0 / 1023.0);
+  return (voltage-1.375) / 0.0225;
 }
 ```
 In our case, we have two sensors for each AC, so we need to calculate the average of two sensors based on which AC we are using now:
@@ -144,10 +144,10 @@ Here, we have made two utility functions to help us control the fans and get mor
 ``` c++
 void controlAC(int AC, int fanSpeed, int compressor) {
     if (AC == AC1) {
-        digitalWrite(Fan1, fanSpeed);
+        analogWrite(Fan1, fanSpeed);
         digitalWrite(Compressor1, compressor);
     } else if (AC == AC0) {
-        digitalWrite(Fan2, fanSpeed);
+        analogWrite(Fan2, fanSpeed);
         digitalWrite(Compressor2, compressor);
     }
 }
@@ -388,4 +388,4 @@ void loop() {
 </details>
 
 # Whole Code
-[code](Code.ino)
+[code](code.ino)

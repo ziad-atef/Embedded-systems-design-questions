@@ -8,8 +8,8 @@
 #define Compressor1 5
 #define Compressor2 7
 
-#define Fan1 6
-#define Fan2 9
+#define Fan1 A0
+#define Fan2 A1
 
 #define AC0 0
 #define AC1 1
@@ -42,8 +42,8 @@ float calculateTemperature(int AC) {
 }
 void controlAC(int AC, int fanSpeed, int compressor) {
     if (AC == AC1) {
-        digitalWrite(Fan1, fanSpeed);
-        digitalWrite(Compressor1, compressor);
+        analogWrite(Fan1, fanSpeed);
+        analogWrite(Compressor1, compressor);
     } else if (AC == AC0) {
         digitalWrite(Fan2, fanSpeed);
         digitalWrite(Compressor2, compressor);
@@ -142,10 +142,6 @@ void setup() {
 
   pinMode(Compressor1, OUTPUT);
   pinMode(Compressor2, OUTPUT);
-
-  pinMode(Fan1, OUTPUT);
-  pinMode(Fan2, OUTPUT);
-
 }
 
 void loop() {
