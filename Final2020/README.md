@@ -24,6 +24,9 @@ The User can do the following:
   - DOWN
   - MODE (required temperature, current AC, fan speed)
 - Alarm Led
+- Seven Segment Display
+  >> Operational Voltage 5V , uses I2C protocol, Write Address for 1st 7 Segment is 53h , Write
+Address for 2nd 7 Segment is 43h , both has internal registers address 50h
 
 # Schematic
 <details> <summary>Click to expand...</summary>
@@ -39,6 +42,8 @@ We will use Demultiplexeres to switch between ACs. We will use the same selectio
 </details>
 
 
+# Assumptions
+- The seven segment display is used to show the required temperature.
 # System Intended Behavior  
 - The fan operates on the specified speed.
 - The compressor is always on when the AC is on.
@@ -54,6 +59,7 @@ Here we setup our pins' direction, whether they are in or out.
 
 ``` c++
 void setup() {
+  wire.begin();
   pinMode(UP_PB, INPUT);
   pinMode(DOWN_PB, INPUT);
   pinMode(MODE_PB, INPUT);
@@ -189,10 +195,42 @@ void controlAC(int fanSpeed, int compressor) {
 ```
 </details>
 
+## Work with the 7-segment display
+<details> <summary>Click to expand...</summary>
+To start working with the 7-segment display (I2C Protocol), we will use a built-in library called `Wire`.
+
+We need to instantiate it in the setup using `wire.begin()`.
+
+To pass value using I2C, we go through 4 main steps:
+- Begin the transmission using the slave address: ``` wire.beginTransmission(SLAVE_ADDRESS); ``` 
+- Select the required registerAddress (optional): ``` wire.write(registerAddress); ```
+- Write the value you want to pass: ``` wire.write(value); ```
+- End the transmission: ``` wire.endTransmission(); ```
+
+``` c++
+void passValueByI2C(int slaveAddress, int registerAddress, int value)
+{
+  Wire.beginTransmission(slaveAddress);
+  Wire.write(registerAddress);
+  Wire.write(value);
+  Wire.endTransmission();
+}
+```
+Now, we wil display the value on the two seven segments we have. To get the first digit -units- use `value % 10` and to get the second digit -tens- use `value / 10`.
+
+``` c++
+void showOnSevenSegment(int value){
+  passValueByI2C(SEVEN_SEG_1_ADDRESS, SEVEN_SEG_COMMON_ADDRESS, value % 10); // 1st digit
+  passValueByI2C(SEVEN_SEG_2_ADDRESS, SEVEN_SEG_COMMON_ADDRESS, value / 10); // 2nd digit
+}
+```
+
+</details>
+
 ## User Interface
 <details> <summary>Click to expand...</summary>
 
-The beauty of this module -function- is that we have abstracted all the system interface with the user in a single module. By user interface I mean the buttons. 
+The beauty of this module -function- is that we have abstracted all the system interface with the user in a single module. By user interface I mean the buttons and the display. 
 ### Mode
 ``` c++
   if ( readPushButton(Mode) ) {
@@ -207,6 +245,7 @@ The beauty of this module -function- is that we have abstracted all the system i
     if(Mode == MODE_TEMPERATURE) {
       requiredTemp++;
       timeOfChange = millis(); // reset the time when the temperature is changed
+      showOnSevenSegment(requiredTemp); // show the requiredTemp on the display
     }
     else if(Mode == MODE_FAN_SPEED && currentFanLevel < MAX_NUMBER_FAN_LEVELS>) {
       currentFanLevel++;
@@ -220,6 +259,7 @@ The beauty of this module -function- is that we have abstracted all the system i
     if(Mode == MODE_TEMPERATURE) {
       requiredTemp--;
        timeOfChange = millis(); // reset the time when the temperature is changed
+      showOnSevenSegment(requiredTemp); // show the requiredTemp on the display
     }
     else if(Mode == MODE_FAN_SPEED && currentFanLevel > 0) {
       currentFanLevel--;
@@ -241,6 +281,7 @@ inc = readPushButton(DOWN_PB) ? -1 : inc;
       if(Mode == MODE_TEMPERATURE) {
         requiredTemp += inc;
         temperatureTimeOfChange = millis(); // reset the time when the temperature is changed
+      showOnSevenSegment(requiredTemp); // show the requiredTemp on the display
       }
       else if(Mode == MODE_FAN_SPEED) {
         updateFanLevel(inc);
@@ -270,6 +311,7 @@ void userInterface() {
       if(Mode == MODE_TEMPERATURE) {
         requiredTemp += inc;
         temperatureTimeOfChange = millis(); // reset the time when the temperature is changed
+        showOnSevenSegment(requiredTemp); // show the requiredTemp on the display
       }
       else if(Mode == MODE_FAN_SPEED) {
         updateFanLevel(inc);
