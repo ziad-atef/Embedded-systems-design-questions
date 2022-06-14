@@ -119,7 +119,7 @@ void systemBehavior() {
     // alternate if we haven't met the requiredTemp 
     if (calculateTemperature() > requiredTemp) 
     {
-      updateCurrentAC(1); // go to the next one
+      controlAC(fanSpeed, LOW); // switch off the compressor
       alarmState = HIGH; // alarm is on 
       temperatureTimeOfChange = currentTime; // update the temperatureTimeOfChange
     }
