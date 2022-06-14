@@ -1,35 +1,37 @@
+// Push Buttons
 #define ON_OFF_PB 0
 #define UP_PB 1
 #define DOWN_PB 2
 #define MODE_PB 3
+// Modes
+#define MODE_TEMPERATURE 0
+#define MODE_FAN_SPEED 1
+#define MODE_ALTERNATING_INTERVAL 2
+// States
+#define OFF_STATE 0
+#define ON_STATE 1
 
+// Alarm LED
 #define ALARM_LED 4
 
-#define Compressor1 5
-#define Compressor2 7
-
-#define Fan1 A0
-#define Fan2 A1
-
+// Related to the ACs
 #define AC0 0
 #define AC1 1
-
+#define Compressor1 5
+#define Compressor2 7
+#define Fan1 10 // PWM
+#define Fan2 11 // PWM
+// Temperature sensors
 #define temperature_sensor_AC1_1 A0
 #define temperature_sensor_AC1_2 A1
 #define temperature_sensor_AC0_1 A2
 #define temperature_sensor_AC0_2 A3
 
-#define MODE_TEMPERATURE 0
-#define MODE_FAN_SPEED 1
-#define MODE_ALTERNATING_INTERVAL 2
-
-#define OFF_STATE 0
-#define ON_STATE 1
-
+// Global Variables =========================================================================================
 bool OnOff = false, alarmState = false;
 long timeOfSwitch, temperatureTimeOfChange;
 int  requiredTemp = 25, currentFanSpeed = 10, alternationTime = 60, Mode = 0, currentAC = AC1;
-
+// Utilities =========================================================================================
 float readTemperatureSensor(int sensor) {
     return analogRead(sensor) * (5.0 / 1023.0) * 100;
 }
@@ -49,8 +51,7 @@ void controlAC(int AC, int fanSpeed, int compressor) {
         digitalWrite(Compressor2, compressor);
     }
 }
-int readPushButton(int pb)
-{
+int readPushButton(int pb){
   if (digitalWrite(pb) == HIGH)
   {
     while(digitalWrite(pb) == HIGH);
@@ -58,6 +59,7 @@ int readPushButton(int pb)
   }
   return 0;
 }
+// Solution =========================================================================================
 void userInterface() {
   if ( readPushButton(ON_OFF_PB) ) {
     OnOff = !OnOff;
@@ -87,7 +89,6 @@ void userInterface() {
     }
 
 }
-
 void systemBehavior() {
   if ( OnOff == OFF_STATE ) {
     //switch everything off
@@ -132,6 +133,7 @@ void systemBehavior() {
       }
   }
 }
+// Arduino =========================================================================================
 void setup() {
   pinMode(ON_OFF_PB, INPUT);
   pinMode(UP_PB, INPUT);
