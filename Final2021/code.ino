@@ -47,9 +47,9 @@ float calculateTemperature(int AC) {
 void controlAC(int AC, int fanSpeed, int compressor) {
     if (AC == AC1) {
         analogWrite(Fan1, fanSpeed);
-        analogWrite(Compressor1, compressor);
+        digitalWrite(Compressor1, compressor);
     } else if (AC == AC0) {
-        digitalWrite(Fan2, fanSpeed);
+        analogWrite(Fan2, fanSpeed);
         digitalWrite(Compressor2, compressor);
     }
 }
