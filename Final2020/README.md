@@ -70,7 +70,10 @@ void setup() {
   pinMode(addressAC0, OUTPUT);
   pinMode(addressAC1, OUTPUT);
   pinMode(addressAC2, OUTPUT);
-  // Note that, we don't need to set the direction of the temperature sensors nor the fans (analog pins), since they are already set to input. 
+
+  pinMode(FAN_SPEED_PIN, OUTPUT);
+  pinMode(COMPRESSOR_PIN, OUTPUT);
+  // Note that, we don't need to set the direction of the temperature sensors , since they are already set to input. 
 }
 ```
 </details>
@@ -312,6 +315,7 @@ void userInterface() {
         requiredTemp += inc;
         temperatureTimeOfChange = millis()/(60e3); // reset the time when the temperature is changed
         showOnSevenSegment(requiredTemp); // show the requiredTemp on the display
+        Capture = 0; // reset the capture variable for the compressor to start operating again
       }
       else if(Mode == MODE_FAN_SPEED) {
         updateFanLevel(inc);
@@ -371,6 +375,34 @@ else
 ```
 </details>
 
+### 3. Adding threshold to operation of the compressor
+<details> <summary>Click to expand...</summary>
+The optimization we wanted to add here was to let our compressor operate until the temprature is met. but it doesn't start operating again until a certain threshold is crossed.
+For simplicity we reversed the above logic and added threshold to it.
+To achieve that we set Capture value to be 0 as long as I didn't reach the requiredTemp. Once that I reached the requiredTemp, I set the Capture value to be equal to tempreature to break the truthness of the if condition.
+We remain in that state until we cross the threshold. then we start operating the compressor.+
+
+``` c++
+// check if we need to close the ACs
+int temperature = calculateTemperature();
+  if (temperature >= requiredTemp && temperature - Capture > COMPRESSOR_THRESHOLD_TEMPERATURE)
+  {
+    controlAC(fanSpeed, HIGH);
+    Capture = 0; // reset the capture variable for the compressor to continue operating until we meet the requiredTemp
+    if(temperature == requiredTemp)
+    {
+      Capture = temperature;
+    }
+  }
+  else 
+  {
+    temperatureTimeOfChange = currentTime; // update the temperatureTimeOfChange
+    controlAC(fanSpeed, LOW);
+    alarmState = LOW; // switch off the alarm
+  }
+```
+</details>
+
 ### Now, function is
 <details> <summary>Click to expand...</summary>
 
@@ -392,15 +424,21 @@ void systemBehavior() {
   }
   ////////////////////////////////////////////////////////////////////////////////////////////////
   // check if we need to close the ACs
-  if (calculateTemperature() <= requiredTemp)
+  int temperature = calculateTemperature();
+  if (temperature >= requiredTemp && temperature - Capture > COMPRESSOR_THRESHOLD_TEMPERATURE)
+  {
+    controlAC(fanSpeed, HIGH);
+    Capture = 0; // reset the capture variable for the compressor to continue operating until we meet the requiredTemp
+    if(temperature == requiredTemp)
+    {
+      Capture = temperature;
+    }
+  }
+  else 
   {
     temperatureTimeOfChange = currentTime; // update the temperatureTimeOfChange
     controlAC(fanSpeed, LOW);
     alarmState = LOW; // switch off the alarm
-  }
-  else 
-  {
-    controlAC(fanSpeed, HIGH);
   }
 }
 ```

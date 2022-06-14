@@ -1,10 +1,12 @@
 // To use I2C, you need to include the Wire library
 #include <wire.h>
+
 // Push Buttons
 #define ON_OFF_PB 0
 #define UP_PB 1
 #define DOWN_PB 2
 #define MODE_PB 3
+
 // Modes
 #define MODE_TEMPERATURE 0
 #define MODE_FAN_SPEED 1
@@ -35,10 +37,12 @@
 #define SEVEN_SEG_2_ADDRESS 43h
 #define SEVEN_SEG_COMMON_ADDRESS 50h
 
+// Related to threshold after which compressor is activated again
+#define COMPRESSOR_THRESHOLD_TEMPERATURE 3
 // Global Variables =========================================================================================
 bool alarmState = false;
 long temperatureTimeOfChange;
-int  requiredTemp = 25, currentFanLevel = 0, currentFanSpeed = 10, alternationTime = 60, Mode = 0, currentAC = AC0;
+int  requiredTemp = 25, currentFanLevel = 0, currentFanSpeed = 10, alternationTime = 60, Mode = 0, currentAC = AC0, Capture = 0;
 // Utilities =========================================================================================
 float readTemperatureSensor(int sensor) {
   float voltage = analogRead(sensor) * (5.0 / 1023.0);
@@ -99,6 +103,7 @@ void userInterface() {
         requiredTemp += inc;
         temperatureTimeOfChange = millis()/(60e3); // reset the time when the temperature is changed
         showOnSevenSegment(requiredTemp); // show the requiredTemp on the display
+        Capture = 0; // reset the capture variable for the compressor to start operating again
       }
       else if(Mode == MODE_FAN_SPEED) {
         updateFanLevel(inc);
@@ -126,15 +131,21 @@ void systemBehavior() {
   }
   ////////////////////////////////////////////////////////////////////////////////////////////////
   // check if we need to close the ACs
-  if (calculateTemperature() <= requiredTemp)
+  int temperature = calculateTemperature();
+  if (temperature >= requiredTemp && temperature - Capture > COMPRESSOR_THRESHOLD_TEMPERATURE)
+  {
+    controlAC(fanSpeed, HIGH);
+    Capture = 0; // reset the capture variable for the compressor to continue operating until we meet the requiredTemp
+    if(temperature == requiredTemp)
+    {
+      Capture = temperature;
+    }
+  }
+  else 
   {
     temperatureTimeOfChange = currentTime; // update the temperatureTimeOfChange
     controlAC(fanSpeed, LOW);
     alarmState = LOW; // switch off the alarm
-  }
-  else 
-  {
-    controlAC(fanSpeed, HIGH);
   }
 }
 // Arduino =========================================================================================
@@ -150,6 +161,9 @@ void setup() {
   pinMode(addressAC0, OUTPUT);
   pinMode(addressAC1, OUTPUT);
   pinMode(addressAC2, OUTPUT);
+
+  pinMode(FAN_SPEED_PIN, OUTPUT);
+  pinMode(COMPRESSOR_PIN, OUTPUT);
 }
 
 void loop() {
