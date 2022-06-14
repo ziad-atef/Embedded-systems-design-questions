@@ -14,10 +14,10 @@
 #define ALARM_LED 4
 
 // Compressor
-#define COMPRESSOR_PIN 5
+#define COMPRESSOR_PIN 12
 
 // Related to the fan
-#define FAN_SPEED_PIN 10 // PWM
+#define FAN_SPEED_PIN 11 // PWM
 #define MAX_NUMBER_FAN_LEVELS 5
 
 // Temperature sensors
