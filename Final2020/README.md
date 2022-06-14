@@ -345,7 +345,7 @@ if (currentTime - temperatureTimeOfChange > 60min) // 60 minutes has passed
   // alternate if we haven't met the requiredTemp 
   if (calculateTemperature() > requiredTemp) 
   {
-    updateCurrentAC(inc);
+    updateCurrentAC(1); // go to the next one
     alarmState = HIGH; // alarm is on 
     temperatureTimeOfChange = currentTime; // update the temperatureTimeOfChange
   }
@@ -385,7 +385,7 @@ void systemBehavior() {
     // alternate if we haven't met the requiredTemp 
     if (calculateTemperature() > requiredTemp) 
     {
-      updateCurrentAC(inc);
+      updateCurrentAC(1); // go to the next one
       alarmState = HIGH; // alarm is on 
       temperatureTimeOfChange = currentTime; // update the temperatureTimeOfChange
     }
