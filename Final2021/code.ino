@@ -125,11 +125,11 @@ void systemBehavior() {
       {
         temperatureTimeOfChange = currentTime; // update the temperatureTimeOfChange
         controlAC(currentAC, fanSpeed, LOW);
+        alarmState = LOW; // switch off the alarm
       }
       else 
       {
         controlAC(currentAC, fanSpeed, HIGH);
-        alarmState = LOW; // switch off the alarm
       }
   }
 }

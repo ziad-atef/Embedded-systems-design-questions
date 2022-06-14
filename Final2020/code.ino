@@ -130,11 +130,11 @@ void systemBehavior() {
   {
     temperatureTimeOfChange = currentTime; // update the temperatureTimeOfChange
     controlAC(fanSpeed, LOW);
+    alarmState = LOW; // switch off the alarm
   }
   else 
   {
     controlAC(fanSpeed, HIGH);
-    alarmState = LOW; // switch off the alarm
   }
 }
 // Arduino =========================================================================================
