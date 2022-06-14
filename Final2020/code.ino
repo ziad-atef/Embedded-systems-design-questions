@@ -72,9 +72,9 @@ void updateCurrentAC(int incrementValue){
   // Now, I can say that I am proud of myself <3
 }
 int readPushButton(int pb){
-  if (digitalWrite(pb) == HIGH)
+  if (digitalRead(pb) == HIGH)
   {
-    while(digitalWrite(pb) == HIGH);
+    while(digitalRead(pb) == HIGH);
     return 1;
   }
   return 0;
