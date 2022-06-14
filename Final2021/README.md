@@ -176,7 +176,7 @@ The beauty of this module -function- is that we have abstracted all the system i
   if ( readPushButton(UP_PB) ) {
     if(Mode == MODE_TEMPERATURE) {
       requiredTemp++;
-      timeOfChange = millis(); // reset the time when the temperature is changed
+      timeOfChange = millis()/(60e3); // reset the time when the temperature is changed
     }
     else if(Mode == MODE_FAN_SPEED && currentFanSpeed < 255) {
       currentFanSpeed++;
@@ -189,7 +189,7 @@ The beauty of this module -function- is that we have abstracted all the system i
   if ( readPushButton(DOWN_PB) ) {
     if(Mode == MODE_TEMPERATURE) {
       requiredTemp--;
-       timeOfChange = millis(); // reset the time when the temperature is changed
+       timeOfChange = millis()/(60e3); // reset the time when the temperature is changed
     }
     else if(Mode == MODE_FAN_SPEED && currentFanSpeed > 0) {
       currentFanSpeed--;
@@ -210,7 +210,7 @@ inc = readPushButton(DOWN_PB) ? -1 : inc;
 if (inc != 0) {
     if(Mode == MODE_TEMPERATURE) {
       requiredTemp += inc;
-      timeOfChange = millis(); // reset the time when the temperature is changed
+      timeOfChange = millis()/(60e3); // reset the time when the temperature is changed
     }
     else if(Mode == MODE_FAN_SPEED) {
       currentFanSpeed += inc;
@@ -245,7 +245,7 @@ void userInterface() {
   if (inc != 0) {
       if(Mode == MODE_TEMPERATURE) {
         requiredTemp += inc;
-        temperatureTimeOfChange = millis(); // reset the time when the temperature is changed
+        temperatureTimeOfChange = millis()/(60e3); // reset the time when the temperature is changed
       }
       else if(Mode == MODE_FAN_SPEED) {
         currentFanSpeed += inc;
@@ -284,7 +284,7 @@ if we the system if on, we have two main blocks:
 <details> <summary>Click to expand...</summary>
 
 ``` c++
-long long currentTime = millis(); // get the currentTime
+long long currentTime = millis()/(60e3); // get the currentTime
 // check if we need to alternate ACs
 if (currentTime - timeOfSwitch > alternationTime)
 {
@@ -339,7 +339,7 @@ void systemBehavior() {
   }
   else {
       digitalWrite(ALARM_LED, alarmState);
-      long long currentTime = millis(); // get the currentTime
+      long long currentTime = millis()/(60e3); // get the currentTime
      // check if we need to alternate ACs
      if (currentTime - timeOfSwitch > alternationTime)
       {

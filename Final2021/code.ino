@@ -75,7 +75,7 @@ void userInterface() {
   if (inc != 0) {
       if(Mode == MODE_TEMPERATURE) {
         requiredTemp += inc;
-        temperatureTimeOfChange = millis(); // reset the time when the temperature is changed
+        temperatureTimeOfChange = millis()/(60e3); // reset the time when the temperature is changed
       }
       else if(Mode == MODE_FAN_SPEED) {
         currentFanSpeed += inc;
@@ -98,7 +98,7 @@ void systemBehavior() {
   }
   else {
       digitalWrite(ALARM_LED, alarmState);
-      long long currentTime = millis(); // get the currentTime
+      long long currentTime = millis()/(60e3); // get the currentTime in minutes
      // check if we need to alternate ACs
      if (currentTime - timeOfSwitch > alternationTime)
       {

@@ -169,7 +169,7 @@ void updateFanLevel(int inc) {
 ``` c++
 void updateCurrentAC(int incrementValue)
 {
-  temperatureTimeOfChange = millis(); // calculate new value for the newly switched on AC
+  temperatureTimeOfChange = millis()/(60e3); // calculate new value for the newly switched on AC
   // update the value of the currentAC
   currentAC += inc % MAX_NUMBER_AC;
   currentAC = currentAC < 0 ? 0 : currentAC;
@@ -244,7 +244,7 @@ The beauty of this module -function- is that we have abstracted all the system i
   if ( readPushButton(UP_PB) ) {
     if(Mode == MODE_TEMPERATURE) {
       requiredTemp++;
-      timeOfChange = millis(); // reset the time when the temperature is changed
+      timeOfChange = millis()/(60e3); // reset the time when the temperature is changed
       showOnSevenSegment(requiredTemp); // show the requiredTemp on the display
     }
     else if(Mode == MODE_FAN_SPEED && currentFanLevel < MAX_NUMBER_FAN_LEVELS>) {
@@ -258,7 +258,7 @@ The beauty of this module -function- is that we have abstracted all the system i
   if ( readPushButton(DOWN_PB) ) {
     if(Mode == MODE_TEMPERATURE) {
       requiredTemp--;
-       timeOfChange = millis(); // reset the time when the temperature is changed
+       timeOfChange = millis()/(60e3); // reset the time when the temperature is changed
       showOnSevenSegment(requiredTemp); // show the requiredTemp on the display
     }
     else if(Mode == MODE_FAN_SPEED && currentFanLevel > 0) {
@@ -280,7 +280,7 @@ inc = readPushButton(DOWN_PB) ? -1 : inc;
   if (inc != 0) {
       if(Mode == MODE_TEMPERATURE) {
         requiredTemp += inc;
-        temperatureTimeOfChange = millis(); // reset the time when the temperature is changed
+        temperatureTimeOfChange = millis()/(60e3); // reset the time when the temperature is changed
       showOnSevenSegment(requiredTemp); // show the requiredTemp on the display
       }
       else if(Mode == MODE_FAN_SPEED) {
@@ -310,7 +310,7 @@ void userInterface() {
   if (inc != 0) {
       if(Mode == MODE_TEMPERATURE) {
         requiredTemp += inc;
-        temperatureTimeOfChange = millis(); // reset the time when the temperature is changed
+        temperatureTimeOfChange = millis()/(60e3); // reset the time when the temperature is changed
         showOnSevenSegment(requiredTemp); // show the requiredTemp on the display
       }
       else if(Mode == MODE_FAN_SPEED) {
@@ -338,7 +338,7 @@ We have two main blocks:
 <details> <summary>Click to expand...</summary>
 
 ``` c++
-long long currentTime = millis(); // get the currentTime
+long long currentTime = millis()/(60e3); // get the currentTime
 // check if we need to alternate ACs
 if (currentTime - temperatureTimeOfChange > 60min) // 60 minutes has passed
 {
@@ -378,7 +378,7 @@ else
 void systemBehavior() {
   
   digitalWrite(ALARM_LED, alarmState);
-  long long currentTime = millis(); // get the currentTime
+  long long currentTime = millis()/(60e3); // get the currentTime
   // check if we need to alternate ACs
   if (currentTime - temperatureTimeOfChange > 60min) // 60 minutes has passed
   {
