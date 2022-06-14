@@ -1,36 +1,45 @@
-# include <wire.h>
+// To use I2C, you need to include the Wire library
+#include <wire.h>
+// Push Buttons
 #define ON_OFF_PB 0
 #define UP_PB 1
 #define DOWN_PB 2
 #define MODE_PB 3
+// Modes
+#define MODE_TEMPERATURE 0
+#define MODE_FAN_SPEED 1
+#define MODE_currentAC 2
 
+// Alarm LED
 #define ALARM_LED 4
 
+// Compressor
 #define COMPRESSOR_PIN 5
 
-#define FAN_SPEED_PIN A0
+// Related to the fan
+#define FAN_SPEED_PIN 10 // PWM
 #define MAX_NUMBER_FAN_LEVELS 5
 
+// Temperature sensors
 #define temperature_sensor_1 A0
 #define temperature_sensor_2 A1
 
+// Selection pins of the ACs
 #define MAX_NUMBER_AC 8
 #define addressAC0 6
 #define addressAC0 7
 #define addressAC0 8
 
+// Addresses of the seven-segment display
 #define SEVEN_SEG_1_ADDRESS 53h
 #define SEVEN_SEG_2_ADDRESS 43h
 #define SEVEN_SEG_COMMON_ADDRESS 50h
 
-#define MODE_TEMPERATURE 0
-#define MODE_FAN_SPEED 1
-#define MODE_currentAC 2
-
+// Global Variables =========================================================================================
 bool alarmState = false;
 long temperatureTimeOfChange;
 int  requiredTemp = 25, currentFanLevel = 0, currentFanSpeed = 10, alternationTime = 60, Mode = 0, currentAC = AC0;
-
+// Utilities =========================================================================================
 float readTemperatureSensor(int sensor) {
   float voltage = analogRead(sensor) * (5.0 / 1023.0);
   return (voltage-1.375) / 0.0225;
@@ -66,8 +75,7 @@ int readPushButton(int pb){
   }
   return 0;
 }
-void passValueByI2C(int slaveAddress, int registerAddress, int value)
-{
+void passValueByI2C(int slaveAddress, int registerAddress, int value){
   Wire.beginTransmission(slaveAddress);
   Wire.write(registerAddress);
   Wire.write(value);
@@ -77,6 +85,7 @@ void showOnSevenSegment(int value){
   passValueByI2C(SEVEN_SEG_1_ADDRESS, SEVEN_SEG_COMMON_ADDRESS, value % 10); // 1st digit
   passValueByI2C(SEVEN_SEG_2_ADDRESS, SEVEN_SEG_COMMON_ADDRESS, value / 10); // 2nd digit
 }
+// Solution =========================================================================================
 void userInterface() {
   if ( readPushButton(Mode) ) {
     Mode = (Mode++)%3;
@@ -128,6 +137,7 @@ void systemBehavior() {
     alarmState = LOW; // switch off the alarm
   }
 }
+// Arduino =========================================================================================
 void setup() {
   wire.begin();
   pinMode(UP_PB, INPUT);
