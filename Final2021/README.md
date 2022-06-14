@@ -111,13 +111,13 @@ There are two main approaches -as far as I know- to solve this issue:
 ``` c++
 int readPushButton(int pb)
 {
-  if (digitalWrite(pb) == HIGH)
+  if (digitalRead(pb) == HIGH)
   {
     delay(DEBOUNCE_DELAY); // usually 30 ~ 50ms
-    if (digitalWrite(pb) == HIGH) // if the button is still pressed
+    if (digitalRead(pb) == HIGH) // if the button is still pressed
       return 1;
     else 
-        return 1;
+        return 0;
   }
   return 0;
 }
@@ -126,15 +126,14 @@ int readPushButton(int pb)
 ``` c++
 int readPushButton(int pb)
 {
-  if (digitalWrite(pb) == HIGH)
+  if (digitalRead(pb) == HIGH)
   {
-    while(digitalWrite(pb) == HIGH); // stay here until button is released
+    while(digitalRead(pb) == HIGH); // stay here until button is released
     return 1;
   }
   return 0;
 }
 ```
-
 </details>
 
 ## Control ACs

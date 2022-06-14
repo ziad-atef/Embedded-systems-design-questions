@@ -118,13 +118,13 @@ There are two main approaches -as far as I know- to solve this issue:
 ``` c++
 int readPushButton(int pb)
 {
-  if (digitalWrite(pb) == HIGH)
+  if (digitalRead(pb) == HIGH)
   {
     delay(DEBOUNCE_DELAY); // usually 30 ~ 50ms
-    if (digitalWrite(pb) == HIGH) // if the button is still pressed
+    if (digitalRead(pb) == HIGH) // if the button is still pressed
       return 1;
     else 
-        return 1;
+        return 0;
   }
   return 0;
 }
@@ -133,9 +133,9 @@ int readPushButton(int pb)
 ``` c++
 int readPushButton(int pb)
 {
-  if (digitalWrite(pb) == HIGH)
+  if (digitalRead(pb) == HIGH)
   {
-    while(digitalWrite(pb) == HIGH); // stay here until button is released
+    while(digitalRead(pb) == HIGH); // stay here until button is released
     return 1;
   }
   return 0;
@@ -233,7 +233,7 @@ void showOnSevenSegment(int value){
 The beauty of this module -function- is that we have abstracted all the system interface with the user in a single module. By user interface I mean the buttons and the display. 
 ### Mode
 ``` c++
-  if ( readPushButton(Mode) ) {
+  if (readPushButton(Mode) ) {
     Mode = (Mode++)%3; // Mode is 0, 1, 2. There a lot of ways to optimize this line.
   }
 ```
