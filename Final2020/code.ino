@@ -56,7 +56,7 @@ void controlAC(int fanSpeed, int compressor) {
   analogWrite(COMPRESSOR_PIN, compressor);
 }
 void updateFanLevel(int inc) {
-  currentFanLevel += inc % MAX_NUMBER_FAN_LEVELS;
+  currentFanLevel = (currentFanLevel + inc) % MAX_NUMBER_FAN_LEVELS;
   currentFanSpeed = currentFanSpeed < 0 ? 0 : currentFanSpeed;
   currentFanSpeed = currentFanLevel * (255.0 / MAX_NUMBER_FAN_LEVELS)
 }

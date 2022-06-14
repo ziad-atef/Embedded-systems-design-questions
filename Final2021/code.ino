@@ -27,10 +27,12 @@
 #define temperature_sensor_AC0_1 A2
 #define temperature_sensor_AC0_2 A3
 
+// Related to threshold after which compressor is activated again
+#define COMPRESSOR_THRESHOLD_TEMPERATURE 3
 // Global Variables =========================================================================================
 bool OnOff = false, alarmState = false;
 long timeOfSwitch, temperatureTimeOfChange;
-int  requiredTemp = 25, currentFanSpeed = 10, alternationTime = 60, Mode = 0, currentAC = AC1;
+int  requiredTemp = 25, currentFanSpeed = 10, alternationTime = 60, Mode = 0, currentAC = AC1, Capture = 0;
 // Utilities =========================================================================================
 float readTemperatureSensor(int sensor) {
     return analogRead(sensor) * (5.0 / 1023.0) * 100;
@@ -76,6 +78,7 @@ void userInterface() {
       if(Mode == MODE_TEMPERATURE) {
         requiredTemp += inc;
         temperatureTimeOfChange = millis()/(60e3); // reset the time when the temperature is changed
+        Capture = 0; // reset the capture to allow starting the compressor
       }
       else if(Mode == MODE_FAN_SPEED) {
         currentFanSpeed += inc;
@@ -121,15 +124,21 @@ void systemBehavior() {
       }
       ////////////////////////////////////////////////////////////////////////////////////////////////
       // check if we need to close the ACs
-      if (calculateTemperature(currentAC) <= requiredTemp)
+      int temperature = calculateTemperature(currentAC);
+      if (temperature >= requiredTemp && temperature - Capture > COMPRESSOR_THRESHOLD_TEMPERATURE)
+      {
+        controlAC(currentAC, fanSpeed, HIGH);
+        Capture = 0; // reset the capture variable for the compressor to continue operating until we meet the requiredTemp
+        if(temperature == requiredTemp)
+        {
+          Capture = temperature;
+        }
+      }
+      else 
       {
         temperatureTimeOfChange = currentTime; // update the temperatureTimeOfChange
         controlAC(currentAC, fanSpeed, LOW);
         alarmState = LOW; // switch off the alarm
-      }
-      else 
-      {
-        controlAC(currentAC, fanSpeed, HIGH);
       }
   }
 }

@@ -380,8 +380,13 @@ else
 The optimization we wanted to add here was to let our compressor operate until the temprature is met. but it doesn't start operating again until a certain threshold is crossed.
 For simplicity we reversed the above logic and added threshold to it.
 To achieve that we set Capture value to be 0 as long as I didn't reach the requiredTemp. Once that I reached the requiredTemp, I set the Capture value to be equal to tempreature to break the truthness of the if condition.
-We remain in that state until we cross the threshold. then we start operating the compressor.+
+We remain in that state until we cross the threshold. then we start operating the compressor.
 
+For more understanding let's look at the following scenario:
+at the start of the code Capture is reset to 0, requiredTemp is set to 20, COMPRESSOR_THRESHOLD_TEMPERATURE = 3, and the temperature is calculated to be 30. So, if (temperature >= requiredTemp && temperature - Capture > COMPRESSOR_THRESHOLD_TEMPERATURE) will be true.
+It will remain true until we reach temperature == requiredTemp at such point Capture becomes equal to temperature. so temperature - Capture will be less than COMPRESSOR_THRESHOLD_TEMPERATURE. we then close our compressor and remain in the same state until temperature - Capture > COMPRESSOR_THRESHOLD_TEMPERATURE becomes true. such event will occur when the temperature is greater than 23(for example).them if (temperature >= requiredTemp && temperature - Capture > COMPRESSOR_THRESHOLD_TEMPERATURE) will be true again. Captures value will be reset to 0 again until we reach the requiredTemp and so on.
+
+So to summarize now we can turn compressor on until we reach the requiredTemp (20C) then turn it off. but we dont turn it on until we cross the threshold(20+3 = 23C).
 ``` c++
 // check if we need to close the ACs
 int temperature = calculateTemperature();
