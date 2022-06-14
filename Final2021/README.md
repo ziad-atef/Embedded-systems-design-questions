@@ -178,7 +178,7 @@ The beauty of this module -function- is that we have abstracted all the system i
       requiredTemp++;
       timeOfChange = millis(); // reset the time when the temperature is changed
     }
-    else if(Mode == MODE_FAN_SPEED && currentFanSpeed < 255>) {
+    else if(Mode == MODE_FAN_SPEED && currentFanSpeed < 255) {
       currentFanSpeed++;
     }
     else if(Mode == MODE_ALTERNATING_INTERVAL) {
